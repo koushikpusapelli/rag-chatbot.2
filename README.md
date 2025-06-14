@@ -1,11 +1,11 @@
-# 📄 Gemini-Powered PDF Chatbot (RAG-Based)
+#Gemini-Powered PDF Chatbot (RAG-Based)
 
 🔗 **Live Demo**: [Click here to try the chatbot](https://rag-chatbot2-bykoushik.streamlit.app/)  
-*(Replace with your Streamlit Cloud link)*
+
 
 ---
 
-## 🧠 What is this chatbot about?
+# What is this chatbot about?
 
 This chatbot allows users to **upload PDF documents** (like research papers, reports, etc.), and then **ask questions** about the content. It uses the **RAG (Retrieval-Augmented Generation)** pipeline to generate highly accurate, context-aware answers using Google's Gemini model.
 
@@ -22,7 +22,7 @@ This chatbot allows users to **upload PDF documents** (like research papers, rep
 
 ---
 
-## 🔄 How does the RAG pipeline work?
+## How does the RAG pipeline work?
 
 1. **PDF Upload**: You upload a document via the Streamlit UI.
 2. **Chunking**: The document is split into smaller chunks using LangChain.
@@ -45,7 +45,7 @@ This chatbot allows users to **upload PDF documents** (like research papers, rep
 
 ---
 
-## 🔮 Future Development Ideas
+##  Future Development Ideas
 
 - 📁 **Upload entire folders** and recursively process all documents inside
 - ☁️ **Google Drive integration**: Embed and query documents directly from Google Drive
