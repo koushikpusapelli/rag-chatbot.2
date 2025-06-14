@@ -1,6 +1,6 @@
 # 📄 Gemini-Powered PDF Chatbot (RAG-Based)
 
-🔗 **Live Demo**: [Click here to try the chatbot](https://your-deployment-link.com)  
+🔗 **Live Demo**: [Click here to try the chatbot](https://rag-chatbot2-bykoushik.streamlit.app/)  
 *(Replace with your Streamlit Cloud link)*
 
 ---
