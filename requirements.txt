@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+streamlit
+python-dotenv
+google-generativeai
+pinecone
+langchain
+langchain-community
+pypdf
