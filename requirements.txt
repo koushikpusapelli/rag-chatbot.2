@@ -7,3 +7,4 @@ pinecone
 langchain
 langchain-community
 pypdf
+pdfplumber
