@@ -1,63 +1,68 @@
-#Gemini-Powered PDF Chatbot (RAG-Based)
 
-🔗 **Live Demo**: [Click here to try the chatbot](https://rag-chatbot2-bykoushik.streamlit.app/)  
+# 🧠 Agent-RAG: PDF-Chatbot with Gemini + Pinecone
+
+🌐 **Live Demo**: https://rag-chatbot2-bykoushik.streamlit.app/  
 
 
----
+## 📄 What is Agent-RAG?
 
-# What is this chatbot about?
-
-This chatbot allows users to **upload PDF documents** (like research papers, reports, etc.), and then **ask questions** about the content. It uses the **RAG (Retrieval-Augmented Generation)** pipeline to generate highly accurate, context-aware answers using Google's Gemini model.
-
----
-
-## 💡 What does it do?
-
-- Lets you upload and analyze any PDF
-- Splits documents into small text chunks
-- Embeds these chunks using Gemini's embedding model
-- Stores them in Pinecone (vector DB)
-- Retrieves relevant chunks when a question is asked
-- Uses Gemini Pro to generate answers using the retrieved context
+Agent-RAG is an intelligent PDF-based chatbot that allows users to upload **one or more PDF files**, ask questions about them, and get accurate answers using **Retrieval-Augmented Generation (RAG)** powered by **Google Gemini embeddings** and **Pinecone vector database**.
 
 ---
 
-## How does the RAG pipeline work?
+## ⚙️ What It Does
 
-1. **PDF Upload**: You upload a document via the Streamlit UI.
-2. **Chunking**: The document is split into smaller chunks using LangChain.
-3. **Embedding**: Each chunk is converted to a numerical vector using Gemini's embedding model (`embedding-001`).
-4. **Storage**: These vectors are stored in Pinecone, a fast and scalable vector database.
-5. **Retrieval**: When you ask a question, the most relevant chunks are retrieved from Pinecone based on similarity.
-6. **Generation**: Gemini Pro uses the retrieved context to answer your question intelligently.
-
----
-
-## 🛠️ Tech Stack Used
-
-- **Streamlit**: User interface (UI)
-- **Google Generative AI (Gemini)**:
-  - `embedding-001` model for vector generation
-  - `gemini-pro` for answer generation
-- **Pinecone**: Vector database for similarity search
-- **LangChain**: Chunking & PDF handling
-- **Python 3.11**
+- ✅ Upload **multiple PDF files** at once  
+- ✅ Each file is split into **smart chunks** using LangChain's `RecursiveCharacterTextSplitter`  
+- ✅ Chunks are embedded using **Gemini's embedding model**
+- ✅ Embeddings are stored in **Pinecone**
+- ✅ User can query by:
+  - All documents
+  - Specific document (via dropdown)
+- ✅ Answers are generated using **Google Gemini Pro** with context retrieved from Pinecone
 
 ---
 
-##  Future Development Ideas
+## 🔁 How the RAG Pipeline Works
 
-- 📁 **Upload entire folders** and recursively process all documents inside
-- ☁️ **Google Drive integration**: Embed and query documents directly from Google Drive
-- 🌐 **Web-enabled RAG**: Add ability to search the internet and fetch live information
-- 🧠 **Document memory**: Track and summarize previously asked questions
-- 👥 **Multi-user support**: Let multiple users manage their own private document knowledge base
+1. **Upload PDFs** ➝ Processed and split into chunks
+2. **Embed Chunks** ➝ Gemini creates 768-dimensional vectors
+3. **Store in Pinecone** ➝ Vectors stored along with metadata (`text`, `source`)
+4. **Ask Question** ➝ Gemini embeds question ➝ Pinecone retrieves top-K similar chunks
+5. **Generate Answer** ➝ Gemini generates a natural answer using retrieved context
+
+---
+
+## 🛠️ Tools & Frameworks Used
+
+| Component         | Tool / Library                      |
+|------------------|--------------------------------------|
+| Embeddings        | 🔹 Google Gemini (`google-generativeai`) |
+| Vector Store      | 🔹 Pinecone                          |
+| PDF Parsing       | 🔹 `pdfplumber` via LangChain        |
+| Chunking          | 🔹 `RecursiveCharacterTextSplitter`  |
+| LLM               | 🔹 Gemini Pro                        |
+| Frontend (MVP)    | 🔹 Streamlit                         |
+| Backend Utilities | 🔹 FastAPI-ready Python modules      |
+| Environment       | 🔹 Python 3.10+, `.env` configs      |
 
 ---
 
-## 🙌 Built With
+## 📦 Installation & Running Locally
 
-Made using open-source tools and APIs to explore how RAG + Gemini can be used for powerful document understanding and question answering.
+```bash
+git clone https://github.com/koushikpusapelli/rag-chatbot.2.git
+cd rag-chatbot.2
 
----
+# Set up virtual environment
+python -m venv .venv
+source .venv/Scripts/activate  # On Windows
+# OR
+source .venv/bin/activate      # On Mac/Linux
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Create .env file with your keys
+touch .env
 
