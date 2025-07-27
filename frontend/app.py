@@ -4,6 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import streamlit as st
 import uuid
+import tempfile
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PDFPlumberLoader 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -13,58 +14,90 @@ from utils.generate import generate_answer
 from pinecone import Pinecone
 import google.generativeai as genai
 
-
-
+# --- Environment Setup ---
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 index = pc.Index(os.getenv("PINECONE_INDEX_NAME"))
 
-st.title("📄 Agent - RAG")
+# --- UI Title ---
+st.title("🧠 Agent-RAG: Smart PDF Question Answering")
 
+# --- Sidebar: PDF Upload ---
 with st.sidebar:
-    uploaded_file = st.file_uploader("Upload your PDF Document", type=["pdf"])
-    if uploaded_file:
-        with open("temp.pdf", "wb") as f:
-            f.write(uploaded_file.read())
-        loader = PDFPlumberLoader("temp.pdf")  # Cleaner text extraction
+    uploaded_files = st.file_uploader(
+        "📂 Upload one or more PDF files", type=["pdf"], accept_multiple_files=True
+    )
+
+# --- Document Loading and Chunking ---
+all_chunks = []
+
+if uploaded_files:
+    st.info(f"Processing {len(uploaded_files)} file(s)...")
+
+    for uploaded_file in uploaded_files:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+            tmp_file.write(uploaded_file.read())
+            temp_path = tmp_file.name
+
+        loader = PDFPlumberLoader(temp_path)
         docs = loader.load()
-        splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
-        chunks = splitter.split_documents(docs)
-        def is_valid_chunk(text: str) -> bool:
-            return (
-            len(text.strip()) > 100 and
-            "renderx" not in text.lower() and
-            "xsl•fo" not in text.lower() and
-            "journal of" not in text.lower() and
-            len(set(text.lower().split())) > 10
-            )
 
-        clean_chunks = [chunk for chunk in chunks if is_valid_chunk(chunk.page_content)]
-    
-        vector_data = []
-        # ✅ Clear Pinecone index before uploading new vectors
-        ###index.delete(delete_all=True)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
+        chunks = text_splitter.split_documents(docs)
 
-        for chunk in clean_chunks:
+        for chunk in chunks:
+            chunk.metadata["source"] = uploaded_file.name
+
+        all_chunks.extend(chunks)
+
+    st.success(f"✅ Created {len(all_chunks)} chunks.")
+
+    # --- Embedding and Upsert ---
+    vector_data = []
+    for chunk in all_chunks:
+        try:
             embedding = get_embedding(chunk.page_content, task_type="RETRIEVAL_DOCUMENT")
             if embedding and len(embedding) == 768:
                 vector_data.append({
                     "id": str(uuid.uuid4()),
                     "values": embedding,
-                    "metadata": {"text": chunk.page_content}
+                    "metadata": {
+                        "text": chunk.page_content,
+                        "source": chunk.metadata.get("source", "unknown")
+                    }
                 })
-            else:
-                print("❌ Skipped chunk due to invalid embedding (empty or wrong size)")
+        except Exception as e:
+            st.error(f"❌ Embedding Error: {e}")
 
+    if vector_data:
         index.upsert(vectors=vector_data)
-        st.success(f"✅ Uploaded and embedded {len(vector_data)} chunks.")
+        st.success(f"🎉 Uploaded {len(vector_data)} vectors to Pinecone.")
+    else:
+        st.error("❌ No valid chunks were embedded.")
 
-question = st.text_input("Ask a question:")
+# --- Document Selector ---
+file_options = ["All Files"] + list(set([chunk.metadata.get("source", "unknown") for chunk in all_chunks]))
+selected_file = st.selectbox("📄 Choose document to query:", options=file_options)
+
+# --- Top K Chunks Slider ---
+top_k = st.slider("🔢 Number of chunks to retrieve", 1, 10, 3)
+
+# --- User Question ---
+question = st.text_input("💬 Ask a question:")
+
+# --- Run RAG Pipeline ---
 if question:
-    embedding = get_embedding(question)
-    context_chunks = retrieve_context(embedding)
+    query_embedding = get_embedding(question, task_type="RETRIEVAL_QUERY")
+    context_chunks = retrieve_context(query_embedding, selected_file=selected_file, top_k=top_k)
     context = "\n\n".join(context_chunks)
     answer = generate_answer(context, question)
+
+    # --- Display Output ---
     st.markdown("### 📌 Answer")
     st.write(answer)
+
+    with st.expander("🔍 View Retrieved Context Chunks"):
+        for i, chunk in enumerate(context_chunks, 1):
+            st.markdown(f"**Chunk {i}:**")
+            st.write(chunk)
