@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
+from google import genai as new_genai
 import streamlit as st
 import uuid
 import tempfile
@@ -90,17 +90,73 @@ top_k = st.slider("🔢 Number of chunks to retrieve", 1, 10, 3)
 question = st.text_input("💬 Ask a question:")
 
 # --- Run RAG Pipeline ---
+
+# --- Run RAG Pipeline ---
 if question:
-    query_embedding = get_embedding(question, task_type="RETRIEVAL_QUERY")
-    context_chunks = retrieve_context(query_embedding, selected_file=selected_file, top_k=top_k)
-    context = "\n\n".join(context_chunks)
-    answer = generate_answer(context, question)
+    try:
+        with st.spinner("Searching PDF and generating answer..."):
+            query_embedding = get_embedding(
+                question,
+                task_type="RETRIEVAL_QUERY"
+            )
 
-    # --- Display Output ---
-    st.markdown("### 📌 Answer")
-    st.write(answer)
+            if not query_embedding:
+                st.error("Question embedding failed.")
+                st.stop()
 
-    with st.expander("🔍 View Retrieved Context Chunks"):
-        for i, chunk in enumerate(context_chunks, 1):
-            st.markdown(f"**Chunk {i}:**")
-            st.write(chunk)
+            context_chunks = retrieve_context(
+                query_embedding,
+                selected_file=selected_file,
+                top_k=top_k
+            )
+
+            st.markdown("### 🔍 Retrieved Context")
+            st.write(f"Retrieved {len(context_chunks)} chunks.")
+
+            if not context_chunks:
+                st.warning(
+                    "No relevant chunks were found in Pinecone. "
+                    "Try selecting All Files or uploading the PDF again."
+                )
+                st.stop()
+
+            context = "\n\n".join(context_chunks)
+
+            # Direct Gemini call: bypass utils.generate.py
+            client = new_genai.Client(
+                api_key=st.secrets["GOOGLE_API_KEY"]
+            )
+
+            prompt = f"""
+Answer the question using the PDF context below.
+If the answer is not in the context, say so.
+
+PDF context:
+{context}
+
+Question:
+{question}
+"""
+
+            response = client.models.generate_content(
+                model="gemini-3.8-flash",
+                contents=prompt
+            )
+
+            st.markdown("### 📌 Answer")
+
+            if response.text:
+                st.write(response.text)
+            else:
+                st.warning("Gemini returned an empty response.")
+                st.write(response)
+
+            with st.expander("🔍 View Retrieved Context Chunks"):
+                for i, chunk in enumerate(context_chunks, 1):
+                    st.markdown(f"**Chunk {i}:**")
+                    st.write(chunk)
+
+    except Exception as e:
+        st.error(f"Pipeline error: {type(e).__name__}: {e}")
+        st.exception(e)
+
