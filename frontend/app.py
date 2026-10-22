@@ -7,12 +7,13 @@ import uuid
 import tempfile
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PDFPlumberLoader 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from utils.embedding import get_embedding
 from utils.retrieval import retrieve_context
 from utils.generate import generate_answer
 from pinecone import Pinecone
 import google.generativeai as genai
+
 
 # --- Environment Setup ---
 load_dotenv()
