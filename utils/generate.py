@@ -1,48 +1,47 @@
 
+
 import streamlit as st
 from google import genai
 
 
 def generate_answer(context: str, question: str) -> str:
-    if not context or not context.strip():
-        return (
-            "I couldn't find relevant context in Pinecone. "
-            "Please check the retrieved chunks and try again."
-        )
-
-    prompt = f"""
-You are a helpful PDF question-answering assistant.
-
-Answer the user's question using the retrieved context below.
-If the answer is not in the context, clearly say so.
-Do not invent facts.
-
-Retrieved context:
-{context}
-
-User question:
-{question}
-
-Answer:
-"""
+    st.write("Debug: Entered generate_answer()")
+    st.write("Debug: Context length =", len(context or ""))
+    st.write("Debug: Question =", question)
 
     try:
-        client = genai.Client(
-            api_key=st.secrets["GOOGLE_API_KEY"]
-        )
+        api_key = st.secrets.get("GOOGLE_API_KEY", "")
+
+        if not api_key:
+            st.error("GOOGLE_API_KEY is missing from Streamlit Secrets.")
+            return ""
+
+        if not context or not context.strip():
+            st.error("Retrieved context is empty.")
+            return ""
+
+        client = genai.Client(api_key=api_key)
 
         response = client.models.generate_content(
             model="gemini-3.8-flash",
-            contents=prompt
+            contents=(
+                "Answer the question using the context below.\n\n"
+                f"Context:\n{context}\n\n"
+                f"Question: {question}"
+            ),
         )
 
-        if not response.text:
-            raise ValueError("Gemini returned an empty response.")
+        st.write("Debug: Gemini request completed.")
 
-        return response.text.strip()
+        answer = response.text
+        if not answer:
+            st.error("Gemini returned no text. Check its response in logs.")
+            st.write(response)
+            return ""
+
+        return answer.strip()
 
     except Exception as e:
-        st.error(
-            f"Gemini API error: {type(e).__name__}: {e}"
-        )
-        return "❌ Answer generation failed. Check the API error above."
+        st.error(f"Gemini error: {type(e).__name__}: {e}")
+        st.exception(e)
+        return ""
