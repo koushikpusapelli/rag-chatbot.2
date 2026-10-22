@@ -8,3 +8,4 @@ langchain
 langchain-community
 pypdf
 pdfplumber
+langchain-text-splitters
