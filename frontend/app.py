@@ -138,10 +138,46 @@ Question:
 {question}
 """
 
+           
+import time
+from google.genai import errors
+
+response = None
+models_to_try = [
+    "gemini-3.8-flash",
+    "gemini-3.5-flash-lite",
+]
+
+for model_name in models_to_try:
+    for attempt in range(2):
+        try:
             response = client.models.generate_content(
-                model="gemini-3.8-flash",
+                model=model_name,
                 contents=prompt
             )
+            break
+
+        except errors.ServerError as e:
+            if getattr(e, "code", None) != 503:
+                raise
+
+            if attempt == 0:
+                time.sleep(2)
+            else:
+                st.warning(
+                    f"{model_name} is temporarily unavailable."
+                )
+
+    if response is not None:
+        break
+
+if response is None:
+    st.error(
+        "Gemini models are temporarily unavailable. "
+        "Please try again in a minute."
+    )
+    st.stop()
+
 
             st.markdown("### 📌 Answer")
 
