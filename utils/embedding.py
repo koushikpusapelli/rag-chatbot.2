@@ -1,8 +1,12 @@
+
 import google.generativeai as genai
+import streamlit as st
 
 def get_embedding(text: str, task_type="RETRIEVAL_DOCUMENT") -> list:
     try:
-        # Sanity check: keep within token limit (~12K characters)
+        if not text or not text.strip():
+            raise ValueError("The text chunk is empty.")
+
         if len(text) > 12000:
             text = text[:12000]
 
@@ -11,8 +15,17 @@ def get_embedding(text: str, task_type="RETRIEVAL_DOCUMENT") -> list:
             content=text,
             task_type=task_type
         )
-        return response["embedding"]
-    except Exception as e:
-        print("❌ Embedding Error:", e)
-        return []
 
+        embedding = response.get("embedding", [])
+
+        if not embedding:
+            raise ValueError("Google returned an empty embedding.")
+
+        return embedding
+
+    except Exception as e:
+        st.error(
+            f"Google embedding failed ({task_type}): "
+            f"{type(e).__name__}: {e}"
+        )
+        return []
