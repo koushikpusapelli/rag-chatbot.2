@@ -17,9 +17,11 @@ import google.generativeai as genai
 
 # --- Environment Setup ---
 load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-index = pc.Index(os.getenv("PINECONE_INDEX_NAME"))
+
+genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+
+pc = Pinecone(api_key=st.secrets["PINECONE_API_KEY"])
+index = pc.Index(st.secrets["PINECONE_INDEX_NAME"])
 
 # --- UI Title ---
 st.title("🧠 Agent-RAG: Smart PDF Question Answering")
