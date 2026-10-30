@@ -6,7 +6,7 @@
 
 ## 📄 What is Agent-RAG?
 
-Agent-RAG is an intelligent PDF-based chatbot that allows users to upload **one or more PDF files**, ask questions about them, and get accurate answers using **Retrieval-Augmented Generation (RAG)** powered by **Google Gemini embeddings** and **Pinecone vector database**.
+Agent-RAG is an intelligent PDF-based chatbot that allows users to upload **one or more PDF files**, ask questions about them, and get accurate answers using **Retrieval-Augmented Generation (RAG)** powered by **Google Gemini embeddings** and **Pinecone vector database**. I am working further to make this project work with local LLM in persomal computer and secure data base, so that the users can work with any confidential files and dont worry about sensitive data breach. 
 
 ---
 
